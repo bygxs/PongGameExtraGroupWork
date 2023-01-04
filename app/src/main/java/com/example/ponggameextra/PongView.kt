@@ -18,6 +18,9 @@ import androidx.core.content.ContextCompat
 class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : SurfaceView(context),
     Runnable {
 
+    // Boolean for multiplayer
+    var isMultiplayer: Boolean = false
+
     // Our thread so we can run and do multiple task simultaneously
     var gameThread: Thread? = null
 
@@ -33,6 +36,10 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
 
     // Create Upper & Lower bar, false = bottom padel
     var playerPadleBottom: Padle = Padle(screenSizeX, screenSizeY, false)
+
+    var playerPadelTop: Padle = Padle(screenSizeX, screenSizeY, true)
+
+
 
     // Create a pongball
     var pongBall: Ball = Ball(screenSizeX, screenSizeY)
@@ -57,6 +64,7 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
             pongBall.resetBallSpeed()
         }
     }
+
 
 
     // Run method that extends Thread class and implements the Runnable interface
@@ -88,6 +96,10 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
         playerPadleBottom.update(mFPS)
         pongBall.update(mFPS)
 
+        if (isMultiplayer) {
+            playerPadelTop.update(mFPS)
+        }
+
         // PongBall hits bot padle. If ball hits the padel we update the ball speed and position and
         // and increase our score with +1
         if (RectF.intersects(playerPadleBottom.rect, pongBall.rect)) {
@@ -97,6 +109,33 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
 
             score++
             pongBall.increaseBallSpeed()
+        }
+
+        if (isMultiplayer) {
+            if (RectF.intersects(playerPadelTop.rect, pongBall.rect)) {
+                pongBall.setRandomBallSpeedX()
+                pongBall.reverseBallSpeedY()
+                pongBall.clearObstacleY(playerPadelTop.rect.bottom + 8f)
+
+                score ++
+                pongBall.increaseBallSpeed()
+                // TODO kolla på hitbar 
+            }
+        }
+
+        if (isMultiplayer) {
+            if (pongBall.rect.top < 0) {
+                pongBall.reverseBallSpeedY()
+                pongBall.clearObstacleY(12f)
+
+                botLives--
+                if (botLives == 0) {
+                    paused = true
+                }
+                pongBall.setRandomBallSpeedX()
+                restart()
+            }
+
         }
 
         // Pongball hits bottom wall. If ball hit the bottom wall and goes out of "screenSizeY"
@@ -155,12 +194,17 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
             //Padle color
             colorObject.color = Color.WHITE
             canvas.drawRect(playerPadleBottom.rect, colorObject)
+
+            if (isMultiplayer) {
+                canvas.drawRect(playerPadelTop.rect, colorObject)
+            }
             canvas.drawOval(pongBall.rect, colorObject)
 
             // Score Style
             val scoreViewStyle = Paint()
             scoreViewStyle.color = ContextCompat.getColor(context, R.color.text_color)
             scoreViewStyle.textSize = 200f
+
 
             val topScoreViewStyle = Paint()
             topScoreViewStyle.color = ContextCompat.getColor(context, R.color.text_color)
@@ -190,6 +234,8 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
                 screenSizeY - (screenSizeY / 50f), livesViewStyle
 
             )
+
+
             // Draw everything on the screen
             ourHolder.unlockCanvasAndPost(canvas)
 
@@ -241,8 +287,20 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
                         playerPadleBottom.padleMovementState(playerPadleBottom.STOPPED)
                     }
                 }
-            }
+            } else {
+                if (event.getX(i) > screenSizeX / 2) {
+                    playerPadelTop.padleMovementState(playerPadelTop.RIGHT)
+                } else {
+                    playerPadelTop.padleMovementState(playerPadelTop.LEFT)
+                }
 
+                when (event.actionMasked) {
+                    // Player has removed finger from screen
+                    MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP -> {
+                        playerPadelTop.padleMovementState(playerPadelTop.STOPPED)
+                    }
+            }
+            }
 
         }
         return true

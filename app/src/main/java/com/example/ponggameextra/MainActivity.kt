@@ -41,9 +41,14 @@ class MainActivity : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
 
+        val mode = intent.getIntExtra("mode", 0)
+
         // Initialize pongView and set it as the view
         pongView = PongView(this, screenWidth, screenHeight)
         pongView.topScore = topScoreSaved
+
+        pongView.isMultiplayer = (mode == 1)
+
         setContentView(pongView)
     }
 
@@ -63,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
 
         // Saving topscore
-        val sharedPreferences = this.getPreferences(Context.MODE_PRIVATE)
+        val sharedPreferences = this.getSharedPreferences("topScores", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         if (pongView.topScore <= pongView.score) {
             if (topScoreSaved < pongView.score) editor.putInt("top", pongView.score)

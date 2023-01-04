@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 
 class HomeScreen : AppCompatActivity() {
@@ -20,9 +21,15 @@ class HomeScreen : AppCompatActivity() {
     private lateinit var tvScore: TextView
     private lateinit var mainActivity: MainActivity
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_screen)
+
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+        pongView = PongView(this, screenWidth, screenHeight)
 
 
         btnPlay = findViewById(R.id.btn_play)
@@ -37,13 +44,26 @@ class HomeScreen : AppCompatActivity() {
     // "PLAY" button to start the game
     private fun startGame() {
         btnPlay.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Choose game mode")
+            val modes = arrayOf("Single player", "Multiplayer")
+            builder.setItems(modes) { _, which ->
+
+                pongView.isMultiplayer = (which == 1)
+
+                val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("mode", which)
+                startActivity(intent)
+            }
+
+            builder.show()
         }
     }
 
     private fun setScore() {
-        //TODO Get the top score and print it on the home screen!
+        val sharedPreferences = this.getSharedPreferences("topScores", Context.MODE_PRIVATE)
+        val topScore = sharedPreferences.getInt("top", 0)
+        tvScore.text = topScore.toString()
 
     }
 
