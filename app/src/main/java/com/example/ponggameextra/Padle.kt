@@ -52,7 +52,7 @@ class Padle(val screenSizeX: Int, val screenSizeY: Int, setPadleTop: Boolean) {
         if (padleSpeedMovement == RIGHT) {
             padlePositionX = padlePositionX + padleSpeed / fps
 
-        // Padle can't leave the screen
+            // Padle can't leave the screen
         }
         if (rect.left < 0) {
             padlePositionX = 0f

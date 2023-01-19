@@ -20,6 +20,9 @@ class Ball(screenWidth: Int, screenHeight: Int) {
     // Variable of the screen height
     var screenYr = screenHeight
 
+    // Variable to set the speed on which difficult you choose.
+    var difficultSpeed = 1f
+
     // Init block is used to initialize objects. It is called after the object's primary constructor.
     init {
         //Ball is divided by 80 of your screen size
@@ -56,7 +59,7 @@ class Ball(screenWidth: Int, screenHeight: Int) {
 
     // Here we set a random speed. Generate a number between 0 and 1. If the resulting value is 0,
     // the reverseBallSpeedX method is called so we can reverse the speed.
-    fun setRandomBallSpeedX(){
+    fun setRandomBallSpeedX() {
         val randomSpeed = Random()
         val randomSpeedDecision = randomSpeed.nextInt(2)
 
@@ -66,23 +69,23 @@ class Ball(screenWidth: Int, screenHeight: Int) {
     }
 
     fun increaseBallSpeed() {
-        ballSpeedX += ballSpeedX / 40
-        ballSpeedY += ballSpeedY /40
+        ballSpeedX *= difficultSpeed
+        ballSpeedY *= difficultSpeed
     }
 
-    fun resetBallSpeed(){
+    fun resetBallSpeed() {
         ballSpeedY = screenYr / 3f
         ballSpeedX = ballSpeedY
     }
 
     // Move the ball to a specific place on the y-axis
-    fun clearObstacleY(y: Float){
+    fun clearObstacleY(y: Float) {
         rect.bottom = y
         rect.top = y - ballWidth
     }
 
     // Move the ball to a specific place on the x-axis
-    fun clearObstacleX(x: Float){
+    fun clearObstacleX(x: Float) {
         rect.left = x
         rect.right = x + ballWidth
     }

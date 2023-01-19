@@ -16,16 +16,19 @@ import androidx.constraintlayout.widget.ConstraintLayout
 class HomeScreen : AppCompatActivity() {
 
     lateinit var pongView: PongView
+    //variable for sharedpref.
+    private val sharedPrefFile = "HighScoreSaved"
+    //Variable for the score
+    var topScoreSaved = 0
 
     private lateinit var btnPlay: Button
     private lateinit var tvScore: TextView
-    private lateinit var mainActivity: MainActivity
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_screen)
 
+        // Load the resolution of the screen to screenWidth & screenHeight
         val displayMetrics = resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
@@ -41,36 +44,47 @@ class HomeScreen : AppCompatActivity() {
         startGame()
     }
 
-    // "PLAY" button to start the game
+    // "PLAY" button to choose single player or multiplayer.
     private fun startGame() {
         btnPlay.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Choose game mode")
             val modes = arrayOf("Single player", "Multiplayer")
             builder.setItems(modes) { _, which ->
-
                 pongView.isMultiplayer = (which == 1)
-
-                val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("mode", which)
-                startActivity(intent)
+                showDifficultySelectionDialog(which)
             }
-
             builder.show()
         }
     }
 
+    // Set the difficult on the game, easy, normal or hard.
+    private fun showDifficultySelectionDialog(mode: Int) {
+        val difficultyBuilder = AlertDialog.Builder(this)
+        difficultyBuilder.setTitle("Select Difficulty")
+        val difficulties = arrayOf("Easy", "Normal", "Hard")
+        difficultyBuilder.setItems(difficulties) { _, which ->
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("mode", mode)
+            intent.putExtra("difficulty", which)
+
+            startActivity(intent)
+        }
+        difficultyBuilder.show()
+    }
+
+    // get the score from sharedpref and set it to the textview "tvScore".
     private fun setScore() {
-        val sharedPreferences = this.getSharedPreferences("topScores", Context.MODE_PRIVATE)
-        val topScore = sharedPreferences.getInt("top", 0)
-        tvScore.text = topScore.toString()
+        val preferences = getSharedPreferences(sharedPrefFile, Context.MODE_PRIVATE)
+        topScoreSaved = preferences.getInt("topScore", 0)
+        tvScore.text = topScoreSaved.toString()
 
     }
 
     // Set the pop animation for the image on the Homescreen
     private fun pongImageAnimation() {
 
-        val homeScreen1 : ConstraintLayout = findViewById(R.id.home_screen)
+        val homeScreen1: ConstraintLayout = findViewById(R.id.home_screen)
 
         homeScreen1.animate()
             .scaleX(1.2f)

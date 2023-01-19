@@ -40,7 +40,6 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
     var playerPadelTop: Padle = Padle(screenSizeX, screenSizeY, true)
 
 
-
     // Create a pongball
     var pongBall: Ball = Ball(screenSizeX, screenSizeY)
 
@@ -56,15 +55,17 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
         pongBall.reset(screenSizeX, screenSizeY)
 
         // Reset scores and lives if it's game over
+        // And save the top Score in MainActivity with sharedpref.
         if (topLives == 0 || botLives == 0) {
-            if (score > topScore) topScore = score
+            if (score > topScore)
+                topScore = score
+            (context as MainActivity).saveTopScore(topScore)
             score = 0
             topLives = 3
             botLives = 3
             pongBall.resetBallSpeed()
         }
     }
-
 
 
     // Run method that extends Thread class and implements the Runnable interface
@@ -96,6 +97,7 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
         playerPadleBottom.update(mFPS)
         pongBall.update(mFPS)
 
+        // Generate padel at the top when it's multiplayer.
         if (isMultiplayer) {
             playerPadelTop.update(mFPS)
         }
@@ -111,18 +113,23 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
             pongBall.increaseBallSpeed()
         }
 
+        // PongBall hits top padle. If ball hits the padel we update the ball speed and position and
+        // and increase our score with +1
         if (isMultiplayer) {
             if (RectF.intersects(playerPadelTop.rect, pongBall.rect)) {
                 pongBall.setRandomBallSpeedX()
                 pongBall.reverseBallSpeedY()
                 pongBall.clearObstacleY(playerPadelTop.rect.bottom + 8f)
 
-                score ++
+                score++
                 pongBall.increaseBallSpeed()
                 // TODO kolla på hitbar 
             }
         }
 
+        // Pongball hits top wall. If ball hit the bottom wall and goes out of "screenSizeY"
+        //we use "clearObstacleY" to move the ball to the start position. Then we lose 1 of 3 life.
+        // If we got 0 lives the game pause and we can restart it agian
         if (isMultiplayer) {
             if (pongBall.rect.top < 0) {
                 pongBall.reverseBallSpeedY()
@@ -151,6 +158,7 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
                 paused = true
             }
             pongBall.setRandomBallSpeedX()
+
             restart()
 
         }
@@ -215,7 +223,7 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
             livesViewStyle.textSize = 40f
 
             // Draw the score
-             canvas.drawText(
+            canvas.drawText(
                 "$score",
                 screenSizeX / 2f - 53f,
                 screenSizeY / 2f,
@@ -260,12 +268,12 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
         gameThread!!.start()
     }
 
-// What happen when we touch the screen. MotionEvent = represent an input event that is generated
+    // What happen when we touch the screen. MotionEvent = represent an input event that is generated
     //by a touch.
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         paused = false
-    // If this y-coordinate is greater than the height of the screen divided by 2, it means that the
-    // touch occurred on the bottom half of the screen
+        // If this y-coordinate is greater than the height of the screen divided by 2, it means that the
+        // touch occurred on the bottom half of the screen
         for (i in 0 until event.pointerCount) {
             if (event.getY(i) > height / 2) {
 
@@ -287,6 +295,7 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
                         playerPadleBottom.padleMovementState(playerPadleBottom.STOPPED)
                     }
                 }
+                // The same happens when we move tha player at top, multiplayer.
             } else {
                 if (event.getX(i) > screenSizeX / 2) {
                     playerPadelTop.padleMovementState(playerPadelTop.RIGHT)
@@ -299,14 +308,12 @@ class PongView(context: Context, var screenSizeX: Int, var screenSizeY: Int) : S
                     MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP -> {
                         playerPadelTop.padleMovementState(playerPadelTop.STOPPED)
                     }
-            }
+                }
             }
 
         }
         return true
     }
-
-
 
 
 }

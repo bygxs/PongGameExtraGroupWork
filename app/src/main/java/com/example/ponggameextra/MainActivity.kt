@@ -1,6 +1,7 @@
 package com.example.ponggameextra
 
 import android.content.Context
+import android.content.SharedPreferences.Editor
 import android.content.pm.ActivityInfo
 import android.content.res.Resources
 import android.graphics.Paint
@@ -21,8 +22,10 @@ import com.example.ponggameextra.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     lateinit var pongView: PongView
-    var topScoreSaved = 2
-
+    //variable for sharedpref.
+    private val sharedPrefFile = "HighScoreSaved"
+    //Variable for the score
+    var topScoreSaved = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,39 +48,56 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize pongView and set it as the view
         pongView = PongView(this, screenWidth, screenHeight)
-        pongView.topScore = topScoreSaved
+        //pongView.topScore = topScoreSaved
 
+        //Game mode for multiplayer = 1.
         pongView.isMultiplayer = (mode == 1)
+
+        //Receive the difficult and tell the pongView which speed the ball will have.
+        val which = intent.getIntExtra("difficulty", 1)
+        when (which) {
+            0 -> {
+                // Easy mode
+                pongView.pongBall.difficultSpeed = 1f
+            }
+            1 -> {
+                //Normal mode
+                pongView.pongBall.difficultSpeed = 1.05f
+            }
+            2 -> {
+                //Hard mode
+                pongView.pongBall.difficultSpeed = 1.1f
+            }
+        }
 
         setContentView(pongView)
     }
 
+    // Trying to save the highest score with fun "saveTopScore" when it's onResume and onPause.
     override fun onResume() {
         super.onResume()
-
-        // Get the topscore
-        val sharedPreferences = this.getPreferences(Context.MODE_PRIVATE)
-        topScoreSaved = sharedPreferences.getInt("top", 0)
-        pongView.topScore = topScoreSaved
-
-        // Tell the pongView resume method to execute
+        saveTopScore(topScoreSaved)
         pongView.resume()
     }
 
-    override fun onPause(){
+    override fun onPause() {
         super.onPause()
-
-        // Saving topscore
-        val sharedPreferences = this.getSharedPreferences("topScores", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        if (pongView.topScore <= pongView.score) {
-            if (topScoreSaved < pongView.score) editor.putInt("top", pongView.score)
-            }else {
-                if (topScoreSaved < pongView.topScore) editor.putInt("top", pongView.topScore)
-        }
-        editor.apply()
-
-        // Tell the pongView pause method to execute
+        saveTopScore(topScoreSaved)
         pongView.pause()
     }
+
+    //Save the highest score with sharedpref.
+    fun saveTopScore(score: Int) {
+        val preferences = getSharedPreferences(sharedPrefFile, Context.MODE_PRIVATE)
+        val savedScore = preferences.getInt("topScore", 0)
+        if (score > savedScore) {
+            topScoreSaved = score
+            val editor = preferences.edit()
+            editor.putInt("topScore", topScoreSaved)
+            editor.apply()
+        }
+
+    }
 }
+
+
